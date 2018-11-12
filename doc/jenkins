@@ -1,0 +1,446 @@
+Jenkins与网站代码上线解决方案
+
+
+1.1 前言
+
+
+Jenkins是一个用Java编写的开源的持续集成工具。在与Oracle发生争执后，项目从Hudson项目独立。
+
+Jenkins提供了软件开发的持续集成服务。它运行在Servlet容器中（例如Apache Tomcat）。它支持软件配置管理（SCM）工具（包括AccuRev SCM、CVS、Subversion、Git、Perforce、Clearcase和RTC），可以执行基于Apache Ant和Apache Maven的项目，以及任意的Shell脚本和Windows批处理命令。Jenkins的主要开发者是川口耕介。Jenkins是在MIT许可证下发布的自由软件。
+
+1.1.1 Jenkins功能
+1、持续的软件版本发布/测试项目。
+
+2、监控外部调用执行的工作。
+
+1.2 怎么理解持续集成、持续交付、持续部署呢？
+1.2.1 持续集成
+持续集成（英语：Continuous integration，缩写为 CI），一种软件工程流程，将所有工程师对于软件的工作复本，每天集成数次到共用主线（mainline）上。
+
+这个名称最早由葛来迪·布区（Grady Booch）在他的布区方法中提出，但是他并没有提到要每天集成数次。之后成为极限编程（extreme programming，缩写为XP）的一部分。在测试驱动开发（TDD）的作法中，通常还会搭配自动单元测试。
+
+持续集成的提出，主要是为了解决软件进行系统集成时面临的各项问题，极限编程称这些问题为集成地狱（integration hell）。
+
+
+
+持续集成主要是强调开发人员提交了新代码之后，立刻进行构建、（单元）测试。根据测试结果，我们可以确定新代码和原有代码能否正确地集成在一起。简单来讲就是：频繁地（一天多次）将代码集成到主干。
+
+持续集成目的在产生以下效益如：
+
+ü 及早发现集成错误且由于修订的内容较小所以易于追踪，这可以节省项目的时间与成本。
+
+ü 避免发布日期的前一分钟发生混乱，当每个人都会尝试为他们所造成的那一点点不兼容的版本做检查。
+
+ü 当单元测试失败或发生错误，若开发人员需要在不除错的情况下还原代码库到一个没有问题的状态，只需要放弃一小部分的更改 (因为集成的次数频繁)。
+
+ü 让 "最新" 的程序可保持可用的状态供测试、展示或发布用。
+
+ü 频繁的提交代码会促使开发人员创建模块化，低复杂性的代码。
+
+ü 防止分支大幅偏离主干。如果不是经常集成，主干又在不断更新，会导致以后集成的难度变大，甚至难以集成。
+
+1.2.2 持续交付
+持续交付（英语：Continuous delivery，缩写为 CD），是一种软件工程手法，让软件产品的产出过程在一个短周期内完成，以保证软件可以稳定、持续的保持在随时可以释出的状况。
+
+它的目标在于让软件的建置、测试与释出变得更快以及更频繁。这种方式可以减少软件开发的成本与时间，减少风险。
+
+
+
+持续交付在持续集成的基础上，将集成后的代码部署到更贴近真实运行环境的「类生产环境」（production-like environments）中。比如，我们完成单元测试后，可以把代码部署到连接数据库的 Staging 环境中更多的测试。如果代码没有问题，可以继续手动部署到生产环境中。
+
+1.2.3 持续部署
+持续部署（英语：Continuous Deployment，缩写为 CD），是持续交付的下一步，指的是代码通过评审以后，自动部署到生产环境。
+
+有时候，持续部署也与持续交付混淆。持续部署意味着所有的变更都会被自动部署到生产环境中。持续交付意味着所有的变更都可以被部署到生产环境中，但是出于业务考虑，可以选择不部署。如果要实施持续部署，必须先实施持续交付。
+
+
+
+持续部署即在持续交付的基础上，把部署到生产环境的过程自动化。
+
+关键字： CI/CD 持续集成/持续交付/持续部署
+
+1.3 安装配置JENKINS
+了解网Jenkins后，现在进行Jenkins的安装
+
+1.3.1 环境说明
+推荐的硬件配置
+
+1 GB的RAM
+
+50 GB的驱动器空间
+
+系统环境
+
+[root@Jenkins ~]# cat /etc/redhat-release
+CentOS Linux release 7.4.1708 (Core)
+[root@Jenkins ~]# uname -r
+3.10.0-693.el7.x86_64
+[root@Jenkins ~]# getenforce
+Disabled
+[root@Jenkins ~]# systemctl status firewalld.service
+● firewalld.service - firewalld - dynamic firewall daemon
+   Loaded: loaded (/usr/lib/systemd/system/firewalld.service; disabled; vendor preset: enabled)
+   Active: inactive (dead)
+     Docs: man:firewalld(1)
+软件要求
+
+Java 8--无论是Java运行时环境（JRE）还是Java开发工具包（JDK）都可以。
+
+# 可以使用open jdk
+[root@Jenkins ~]# yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel
+[root@Jenkins ~]# java -version
+openjdk version "1.8.0_151"
+OpenJDK Runtime Environment (build 1.8.0_151-b12)
+OpenJDK 64-Bit Server VM (build 25.151-b12, mixed mode)
+1.3.2 安装Jenkins
+软件下载
+
+官方仓库  https://pkg.jenkins.io/redhat-stable/
+清华大学开源软件镜像站  https://mirrors.tuna.tsinghua.edu.cn/jenkins/redhat/
+         下载相应的数据包即可，我这里使用的是jenkins-2.73.1-1.1.noarch.rpm
+
+安装jenkins
+
+rpm -ivh jenkins-2.73.1-1.1.noarch.rpm
+启动jenkins
+
+/etc/init.d/jenkins start
+检查端口信息
+
+[root@Jenkins ~]# netstat -lntp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1213/sshd
+tcp6       0      0 :::8080                 :::*                    LISTEN      1672/java
+tcp6       0      0 :::22                   :::*                    LISTEN      1213/sshd
+RPM包安装的内容
+
+[root@Jenkins ~]# rpm -ql jenkins
+/etc/init.d/jenkins         # 启动文件
+/etc/logrotate.d/jenkins    # 日志分割配置文件
+/etc/sysconfig/jenkins      # jenkins主配置文件
+/usr/lib/jenkins            # 存放war包目录
+/usr/lib/jenkins/jenkins.war   # war 包
+/usr/sbin/rcjenkins         # 命令
+/var/cache/jenkins          # war包解压目录 jenkins网页代码目录
+/var/lib/jenkins            # jenkins 工作目录
+/var/log/jenkins             # 日志
+配置文件说明
+
+[root@Jenkins ~]# grep "^[a-Z]" /etc/sysconfig/jenkins
+JENKINS_HOME="/var/lib/jenkins"    #jenkins工作目录
+JENKINS_JAVA_CMD=""
+JENKINS_USER="jenkins"       # jenkinx启动用户
+JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true"
+JENKINS_PORT="8080"          # 端口
+JENKINS_LISTEN_ADDRESS=""
+JENKINS_HTTPS_PORT=""
+JENKINS_HTTPS_KEYSTORE=""
+JENKINS_HTTPS_KEYSTORE_PASSWORD=""
+JENKINS_HTTPS_LISTEN_ADDRESS=""
+JENKINS_DEBUG_LEVEL="5"
+JENKINS_ENABLE_ACCESS_LOG="no"
+JENKINS_HANDLER_MAX="100"     # 最大连接
+JENKINS_HANDLER_IDLE="20"
+JENKINS_ARGS=""
+1.3.3 web界面安装
+浏览器访问: http://10.0.0.64:8080
+
+
+
+         解锁Jenkins，密码从命令行中获取
+
+
+
+[root@Jenkins ~]# cat /var/lib/jenkins/secrets/initialAdminPassword
+3afe5ad49a794ac2b1a72811f5eb3c9b
+         输入授权密码，然后点击下一步
+
+
+
+         稍等一会来导安装插件选择的页面，将此页面关闭，在安装完成Jenkins后安装插件。
+
+
+
+         关闭安装插件选择后，选择开始使用Jenkins
+
+
+
+安装完成，显示界面
+
+
+
+安装Jenkins插件
+
+系统管理 >> 管理插件
+
+
+
+         选择自己需要的插件进行安装即可，也可选择全部安装。
+
+
+ 1 [root@Jenkins ~]# # 插件安装完成后插件安装目录的内容
+ 2 [root@Jenkins ~]#  ls /var/lib/jenkins/plugins/
+ 3 ace-editor                     credentials.jpi           github-branch-source      jquery-detached.jpi  pam-auth                              pipeline-model-extensions.jpi     ssh-credentials.jpi      workflow-basic-steps.jpi
+ 4 ace-editor.jpi                 display-url-api           github-branch-source.jpi  jsch                 pam-auth.jpi                          pipeline-rest-api                 ssh.jpi                  workflow-cps
+ 5 ant                            display-url-api.jpi       github.jpi                jsch.jpi             pipeline-build-step                   pipeline-rest-api.jpi             ssh-slaves               workflow-cps-global-lib
+ 6 antisamy-markup-formatter      docker-commons            git.jpi                   junit                pipeline-build-step.jpi               pipeline-stage-step               ssh-slaves.jpi           workflow-cps-global-lib.jpi
+ 7 antisamy-markup-formatter.jpi  docker-commons.jpi        gitlab-plugin             junit.jpi            pipeline-github-lib                   pipeline-stage-step.jpi           structs                  workflow-cps.jpi
+ 8 ant.jpi                        docker-workflow           gitlab-plugin.jpi         ldap                 pipeline-github-lib.jpi               pipeline-stage-tags-metadata      structs.jpi              workflow-durable-task-step
+ 9 authentication-tokens          docker-workflow.jpi       git-server                ldap.jpi             pipeline-graph-analysis               pipeline-stage-tags-metadata.jpi  subversion               workflow-durable-task-step.jpi
+10 authentication-tokens.jpi      durable-task              git-server.jpi            mailer               pipeline-graph-analysis.jpi           pipeline-stage-view               subversion.jpi           workflow-job
+11 bouncycastle-api               durable-task.jpi          gradle                    mailer.jpi           pipeline-input-step                   pipeline-stage-view.jpi           timestamper              workflow-job.jpi
+12 bouncycastle-api.jpi           email-ext                 gradle.jpi                mapdb-api            pipeline-input-step.jpi               plain-credentials                 timestamper.jpi          workflow-multibranch
+13 branch-api                     email-ext.jpi             handlebars                mapdb-api.jpi        pipeline-milestone-step               plain-credentials.jpi             token-macro              workflow-multibranch.jpi
+14 branch-api.jpi                 external-monitor-job      handlebars.jpi            matrix-auth          pipeline-milestone-step.jpi           resource-disposer                 token-macro.jpi          workflow-scm-step
+15 build-timeout                  external-monitor-job.jpi  icon-shim                 matrix-auth.jpi      pipeline-model-api                    resource-disposer.jpi             windows-slaves           workflow-scm-step.jpi
+16 build-timeout.jpi              git                       icon-shim.jpi             matrix-project       pipeline-model-api.jpi                scm-api                           windows-slaves.jpi       workflow-step-api
+17 cloudbees-folder               git-client                jackson2-api              matrix-project.jpi   pipeline-model-declarative-agent      scm-api.jpi                       workflow-aggregator      workflow-step-api.jpi
+18 cloudbees-folder.jpi           git-client.jpi            jackson2-api.jpi          maven-plugin         pipeline-model-declarative-agent.jpi  script-security                   workflow-aggregator.jpi  workflow-support
+19 credentials                    github                    javadoc                   maven-plugin.jpi     pipeline-model-definition             script-security.jpi               workflow-api             workflow-support.jpi
+20 credentials-binding            github-api                javadoc.jpi               momentjs             pipeline-model-definition.jpi         ssh                               workflow-api.jpi         ws-cleanup
+21 credentials-binding.jpi        github-api.jpi            jquery-detached           momentjs.jpi         pipeline-model-extensions             ssh-credentials                   workflow-basic-steps     ws-cleanup.jpi
+插件安装完成后插件安装目录的内容
+         至此Jenkins安装完成
+
+1.3.4 Jenkins配置
+1. 配置jenkins并发执行数量，提高执行效率
+
+
+
+         系统管理 >> 系统设置 >> Maven项目配置
+
+
+
+2. 设置邮件，能够在测试完成后，主动发邮件告知测试情况
+
+系统管理 >> 系统设置 >> Jenkins Location
+
+
+
+         向下拉，找到邮件通知，配置邮件的smtp信息
+
+                  配置完成后点击 Test configuration 进行测试，测试成功后，点击保存
+
+
+
+1.4 Jenkins使用
+1.4.1 创建一个新的任务
+创建一个新的任务
+
+
+
+         输入项目的名称，选择构建只有分风格的软件
+
+
+
+1.4.2 将Jenkins与gitlab联合
+gitlab的详细安装方法参照： http://www.cnblogs.com/clsn/p/7929958.html
+
+创建公钥和私钥
+
+[root@Jenkins ~]# ssh-keygen
+Generating public/private rsa key pair.
+
+Enter file in which to save the key (/root/.ssh/id_rsa): Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:5SGYye8oxCKFJjddb4W8JC0RAQhBWCvuG8aZL8eMJs4 root@Jenkins
+The key's randomart image is:
++---[RSA 2048]----+
+|==....=* ..      |
+|...o oo==.       |
+|+.= . =++.o      |
+|++ o   o.+ .     |
+|... o   S .      |
+|o.oo   o         |
+| B+ . . .        |
+|++++ .           |
+|+Eo.             |
++----[SHA256]-----+
+[root@Jenkins ~]# cat .ssh/id_rsa.pub
+[root@Jenkins ~]# cat .ssh/id_rsa
+在gitlab中添加公钥id_rsa.pub
+
+
+
+在jenkins中添加私钥id_rsa
+
+         在首页中，点击项目名称的下拉监听
+
+
+
+         选择源码管理，先将gitlab的项目地址复制过来
+
+
+
+         选择SSH密钥和证书，然后选择直接输入，将私钥复制到下框中即可
+
+         添加完成后，点击保存
+
+
+
+         选择刚才创建的证书，完成后，选择构建
+
+
+
+选择构建
+
+         拉到最底部，选择使用shell脚本
+
+
+
+         脚本内容
+
+
+
+         创建测试环境
+
+[root@Jenkins ~]# mkdir  -p /data/www
+[root@Jenkins ~]# chown -R jenkins.jenkins /data/
+         选择构建后的操作，让每次构建完成后都将结果发送给管理员
+
+
+
+1.4.3 测试手动集成
+回到主页，点击右侧的按钮进行测试
+
+
+
+部署完成
+
+
+
+         查看部署日志
+
+
+
+查看部署结果
+
+[root@Jenkins ~]# ll /data/www/
+总用量 4
+-rw-r--r-- 1 jenkins jenkins 4 11月 30 21:22 flag
+-rw-r--r-- 1 jenkins jenkins 0 11月 30 21:22 README.md
+1.4.4 自动测试（gitlab主动通知Jenkins测试）
+该功能会使用到一个插件 gitlab plugin
+
+配置gitlab认证
+
+
+
+         添加一个新的凭证
+
+
+
+         从gitlab的设置中将 token复制过来
+
+
+
+         将复制的token粘贴到api token中，点ok
+
+
+
+         在系统配置中找到Gitlab 将信息进行填写，Credentials 选择刚刚创建对的即可
+
+
+
+打开项目，编辑项目的构建触发器
+
+
+
+在gitlab上配置连接jenkins ，将Jenkins的Secret token 与Build URL 复制到gitlab中
+
+
+
+         保存之前先进程测试，测试成功后进行保存
+
+
+
+         在gitlab进行上传文件，可以测试。
+
+在日志中显示是 Started ​by ​GitLab ​push ​by ​Administrator 即表示自动集成成功
+
+
+
+1.5 代码上线方案
+1.5.1 早期手动部署代码
+纯手动scp上传代码。
+
+纯手动登陆，Git pull 或者SVN update。
+
+纯手动xftp上传代码。
+
+开发发送压缩包，rz上传，解压部署代码。
+
+缺点：
+
+全程运维参与，占用大量时间。
+
+如果节点多，上线速度慢。
+
+人为失误多，目录管理混乱。
+
+回滚不及时，或者难以回退。
+
+上线方案示意图：
+
+
+
+1.5.2 合理化上线方案
+      1、开发人员需在个人电脑搭建LAMP环境测试开发好的网站代码，并且在办公室或 IDC机房的测试环境测试通过，最好有专职测试人员。
+
+2、程序代码上线要规定时间，例如：三天上线一次，如网站需经常更新可每天下午 17点上线，这个看网站业务性质而定，原则就是影响用户体验最小。
+
+3、代码上线之前需备份，网站程序出了问题方便回退，另外，从上线技巧上讲，上传代码时尽可能先传到服务器网站临时目录，传完整后一步mv过去，或者通过In做软链接— 线上更新代码的思路。如果严格更新，把应用服务器从集群节点平滑下线，然后更新。
+
+4、尽量由运维人员管理上线，对于代码的功能性，开发人员更在意，而对于代码的性 能优化和上线后服务器的稳定，运维更在意服务器的稳定，因此，如果网站宕机问题归运维管，就要让运维上线，这样更规范科学。否则，开发随意更新，出了问题运维负责，这样就错了，运维永远无法抬头。
+
+
+
+图·web代码规范化上线流程图
+
+1.5.3 大型企业上线制度和流程
+JAVA代码环境，上线时，有数台机器同时需要更新或者分批更新 ↓
+
+
+
+1).本地开发人员取svn代码。当天上线提交到trunk，否则，长期项目单开分支开发，然后在合并主线(trunk)
+2).办公内网开发测试时，由开发人员或配置管理员通过部署平台jenkins实现统一部署，（即在部署平台上控制开发机器从svn取代码，编译，打包，发布到开发机，包名如idc_dep.war）.
+3).开发人员通知或和测试人员一起测试程序，没有问题后，由配置管理员打上新的tag标记。这里要注意，不同环境的配置文件是随代码同时发布的。
+4).配置管理员，根据上一步的tag标记，checkout出上线代码，并配置好IDC测试环境的所有配置，执行编译，打包(mvn,ant)(php不需要打包)，然后发布到IDC内的统一分发服务器。
+5).配置管理员或SA上线人员，把分发的程序代码内容推送到相关测试服务器（包名如idc_test.war），然后通知开发及测试人员进行测试。如果有问题向上回退，继续修改。
+6).如果IDC测试没有问题，继续打好tag标记，此时，配置管理员，根据上步的tag标记，checkout出测试好的代码，并配置好IDC正式环境的所有配置，执行编译，打包(mvn,ant)(php不需要打包)，然后发布到IDC内的统一分发服务器主机，准备批量发布。
+7).配置管理员或SA上线人员，把分发的内容推送到相关正式服务器（包名如idc_product.war）,然后通知开发及测试人员进行测试。如果有问题直接发布回滚指令。
+ 　　 IDC正式上线的过程对于JAVA程序，可以是AB组分组上线的思路，即平滑下线一半的服务器，然后发布更新代码，重启测试，无问题后，挂上更新后的服务器，同时再平滑下线另一半的服务器，然后发布更新代码测试（或者直接发布后，重启，挂上线）
+
+1.5.4 php程序代码上线的具体方案
+ 　　对于PHP上线方法：发布代码时（也需要测试流程）可以直接发布到正式线临时目录 ，然后mv或更改link的方式发布到正式上线目录 ，不需要重启http服务。这是新朗，赶集的上线方案。
+
+1.5.5 JAVA程序代码上线的具体方案
+对于java上线方法:较大公司需要分组平滑上线（如从负载均衡器上摘掉一半的服务器），发布代码后，重启服务器测试，没问题后，挂上上好线的一半，再下另外一半。如果前端有DNS智能解析，上线还可以分地区上线若干服务器，逐渐普及到全国的服务器，这个被称为“灰度发布”，在后面门户网站上线的知识里我们在讲解。
+
+1.5.6 代码上线解决方案注意事项
+ 1).上线的流程里，办公室测试环境-->IDC测试环境-->正式生产环境，所有环境中的所有软件均应版本统一，其次尽量单一，否则将后患无穷，开发测试成功，IDC测试就可能有问题（如:操作系统，web服务器，jdk,php,tomcat,resin等版本）
+ 2).开发团队小组办公内部测试环境测试（该测试环境属于开发小组维护，或定时自动更新代码），代码有问题返回给某开发人员重新开发。
+ 3).有专门的测试工程师，程序有问题直接返回给开发人员（此时返回的一般为程序的BUG，称为BUG库），无问题进行IDC测试
+ 4).IDC测试由测试人员和运维人员参与，叫IDCtest,进行程序的压力测试，有问题直接返回给开发人员，无问题进行线上环境上线。
+ 5).数台服务器代码分发上线方案举例（JAVA程序）
+  　　 A:假设同业务服务器有6台，将服务器分为A,B两组，A组三台，B组三台，先对A组进行从负载均衡器上平滑下线，B组正常提供服务，避免服务器因上线影响业务。
+  　　 B:下线过程是通过脚本将A组服务器从RS池（LVS,NGINX,HAPROXY,F5等均有平滑方案）中踢出，避免负裁均衡器将请求发送给A组服务器（此时的时间应该为网站流量少时，一般为晚上）
+  　　 C:将代码分发到A组服务器的站点目录下，对A组服务器上线并重启服务，并由专业的测试人员进行访问测试，测试成功后，挂上A组的服务器，同时下线B组服务器，B组代码上线操作测试等和A组相同，期间也要观察上线提供服务的服务器状况，有问题及时回滚。
+6).特别说明：如果是PHP程序，则上线可以简单化，直接将上线代码（最好全量）发布到所有上线服务器的特定目录后，分发完成后，一次性mv或ln到站点目录，当然测试也是少不了的。测试除了人员测试外，还有各种测试脚本测试各个相关业务接口。
+7).大多数门户公司的前端页面都已经静态化或者cache了，因此，动态的部分访问平时就不会特别多，流量低谷时就更少了。再加上是平滑上下线，因此基本上
+1.6 参考文献
+1.   https://zh.wikipedia.org/wiki/持續整合
+
+2.   https://www.zhihu.com/question/23444990/answer/89426003
+
+3.   https://www.mindtheproduct.com/2016/02/what-the-hell-are-ci-cd-and-devops-a-cheatsheet-for-the-rest-of-us/
+
+4.   http://t.cn/RYKgMtc 自动化部署
+
+5.   http://www.cnblogs.com/can-H/articles/7346724.html
+
+6.   https://www.abcdocker.com/abcdocker/2041
