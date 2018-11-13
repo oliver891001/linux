@@ -1,0 +1,30 @@
+#!/bin/bash
+function SendMessageToDingding(){
+    Dingding_Url="这就是刚刚机器人的 webhook xxxxxxxx"
+    # 发送钉钉消息
+    curl "${Dingding_Url}" -H 'Content-Type: application/json' -d "
+    {
+        \"actionCard\": {
+            \"title\": \"$1\",
+            \"text\": \"$2\",
+            \"hideAvatar\": \"0\",
+            \"btnOrientation\": \"0\",
+            \"btns\": [
+                {
+                    \"title\": \"$1\",
+                    \"actionURL\": \"\"
+                }
+            ]
+        },
+        \"msgtype\": \"actionCard\"
+    }"
+}
+
+Subject="这是标题"
+
+Body="这是消息内容！"
+
+SendMessageToDingding $Subject $Body
+
+简单的curl集合命令为：
+curl "https://oapi.dingtalk.com/robot/send?access_token=079d2fb3521b97a3bb3ee089f9887331b7fc7d3b934a99b7ad904d74ab2dd8af" -H 'Content-Type: application/json' -d "{\"actionCard\": {\"text\": \"zheshi\",},\"msgtype\": \"actionCard\"}"
