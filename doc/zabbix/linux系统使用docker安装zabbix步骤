@@ -1,0 +1,61 @@
+本文档适用架构  nginx+mysql+zabbix-server+zabbix-proxy
+
+1、docker镜像下载
+zabbix agent客户端镜像下载：
+    docker pull zabbix/zabbix-agent
+Zabbix server（支持MySQL数据库）镜像下载：
+    docker pull zabbix/zabbix-server-mysql
+Zabbix web接口（基于nginx web+mysql）镜像下载：
+    docker pull zabbix/zabbix-web-nginx-mysql
+Zabbix proxy（支持MySQL数据库）：
+    docker pull zabbix/zabbix-proxy-mysql
+Zabbix Java Gateway：
+    docker pull zabbix/zabbix-java-gateway
+对于SNMP trap的支持：
+    docker pull zabbix/zabbix-snmptraps
+
+2、docker镜像容器启动
+①：需要mysql支持，启动一个空的mysql服务器实例
+    # docker run --name mysql-server -t \
+          -e MYSQL_DATABASE="zabbix" \
+          -e MYSQL_USER="zabbix" \
+          -e MYSQL_PASSWORD="zabbix_pwd" \
+          -e MYSQL_ROOT_PASSWORD="root_pwd" \
+          -d mysql:5.7
+②：启动zabbix Java gateway实例
+    # docker run --name zabbix-java-gateway -t \
+          -d zabbix/zabbix-java-gateway:latest
+③：启动Zabbix server实例，并关联这个实例到已创建的MySQL服务器实例
+# docker run --name zabbix-server-mysql -t \
+      -e DB_SERVER_HOST="mysql-server" \
+      -e MYSQL_DATABASE="zabbix" \
+      -e MYSQL_USER="zabbix" \
+      -e MYSQL_PASSWORD="zabbix_pwd" \
+      -e MYSQL_ROOT_PASSWORD="root_pwd" \
+      -e ZBX_JAVAGATEWAY="zabbix-java-gateway" \
+      --link mysql-server:mysql \
+      --link zabbix-java-gateway:zabbix-java-gateway \
+      -p 10051:10051 \
+      -d zabbix/zabbix-server-mysql:latest
+④：启动Zabbix web 接口，并将它与MySQL服务器实例和Zabbix server实例关联（如果宿主机有80端口占用请修改映射端口号）
+    # docker run --name zabbix-web-nginx-mysql -t \
+          -e DB_SERVER_HOST="mysql-server" \
+          -e MYSQL_DATABASE="zabbix" \
+          -e MYSQL_USER="zabbix" \
+          -e MYSQL_PASSWORD="zabbix_pwd" \
+          -e MYSQL_ROOT_PASSWORD="root_pwd" \
+          --link mysql-server:mysql \
+          --link zabbix-server-mysql:zabbix-server \
+          -p 8080:80 \
+          -d zabbix/zabbix-web-nginx-mysql:latest
+
+3、web页面访问
+浏览器直接访问宿主机ip：端口  （端口号为映射端口号，我启动的端口是8080映射到docker的80）
+ip:8080
+
+4、拷贝zabbix agent的配置文件到需要监控的服务器中
+
+    宿主机监控需要在agent的配置文件中的ip换成docker容器的ip，在web界面添加宿主机监控需要填写宿主机的内网ip
+5、验证监控是否通
+在docker zabbix-server的容器内运行 zabbix-server/bin/zabbix_get -s 172.24.125.115（需要监控的服务器ip） -p 10050 -k "system.uptime"
+如果返回 8970617 这样的数字，说明监控的客户端通

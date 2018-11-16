@@ -1,0 +1,124 @@
+1、Docker
+Zabbix为每个Zabbix组件都提供了Docker镜像，以加速便携（portable）和自给自足（self-sufficient）的容器部署和升级过程。
+
+Zabbix组件支持MySQL和PostgreSQL数据库，支持Apache2和Nginx作为Web服务器。这些镜像被分成多个不同的镜像。
+
+Docker base images
+Zabbix组件提供了Ubuntu和Alpine Linux的基础镜像：
+
+2、镜像	版本
+alpine	latest
+ubuntu	trusty
+如果基础镜像升级了，所有的镜像被配置为重建成最新版本的镜像。
+
+3、Docker源文件
+通过github.com上的Zabbix 官方源代码库，任何人都可以跟踪Docker文件的变更记录。基于官方Docker文件，你可以制作分支项目或者你自己的镜像
+
+结构
+所有Zabbix组件都下列Docker源码库中提供：
+
+①、Zabbix agent - zabbix/zabbix-agent
+②、Zabbix server
+    Zabbix server（支持MySQL数据库） - zabbix/zabbix-server-mysql
+    Zabbix server（支持PostgreSQL数据库） - zabbix/zabbix-server-pgsql
+③、Zabbix web接口
+    基于Apache2 web服务器及支持MySQL数据库的Zabbix web接口 - zabbix/zabbix-web-apache-mysql
+    基于Nginx web服务器及支持MySQL数据库的Zabbix web接口 - zabbix/zabbix-web-nginx-mysql
+    基于Nginx web服务器及支持PostgreSQL数据库的Zabbix web接口 - zabbix/zabbix-web-nginx-pgsql
+④、Zabbix proxy
+    Zabbix proxy（支持SQLite3数据库） - zabbix/zabbix-proxy-sqlite3
+    Zabbix proxy（支持MySQL数据库） - zabbix/zabbix-proxy-mysql
+⑤、Zabbix Java Gateway - zabbix/zabbix-java-gateway
+⑥、另外，对于SNMP trap的支持，这里只基于Ubuntu Trusty提供额外的源代码库(zabbix/zabbix-snmptraps)。 这可以关联Zabbix server和Zabbix proxy使用。
+
+4、版本
+Zabbix组件的每个源码库都包含了下列标签：
+
+    latest - 基于Alpine Linux的最新稳定版本的Zabbix组件镜像
+    alpine-latest - 基于Alpine Linux的最新稳定版本的Zabbix组件镜像
+    ubuntu-latest - 基于Ubuntu Linux的最新稳定版本的Zabbix组件镜像
+    alpine-3.2-latest - 基于Alpine Linux的Zabbix 3.2最新次要版本的组件镜像
+    ubuntu-3.2-latest - 基于Ubuntu Linux的Zabbix 3.2最新次要版本的组件镜像
+    alpine-3.2.* - 基于Alpine Linux的Zabbix 3.2不同次要版本的组件镜像，*代表具体的次要版本
+    ubuntu-3.2.* - 基于Ubuntu Linux的Zabbix 3.2不同次要版本的组件镜像，*代表具体的次要版本
+
+5、使用方法
+环境变量
+所有Zabbix组件的镜像提供了环境变量用以控制配置。这些环境变量在每个组件的源码库中列出。这些环境变量作为Zabbix配置文件的选项，但有不同的命名方法。比如，Zabbix server配置文件中的ZBX_LOGSLOWQUERIES和Zabbix proxy配置文件中的LogSlowQueries是同一个配置选项。
+
+    一些配置选项不允许更改。比如：PIDFile和LogType。
+一些组件存在特定的环境变量，而这些环境变量可能在Zabbix官方的配置文件中不存在：
+
+变量	组件	描述
+DB_SERVER_HOST	Server
+Proxy
+Web 接口	这个变量指的是MySQL或者PostgreSQL服务器的IP或者DNS名称。
+默认情况下，这个值为mysql-server 或者postgres-server，依据使用MySQL或者PostgreSQL而定。
+DB_SERVER_PORT	Server
+Proxy
+Web 接口	这个变量指的是MySQL或者PostgreSQL服务器的端口。
+默认情况下，这个值为'3306'或者'5432'，依据使用MySQL或者PostgreSQL而定。
+MYSQL_USER	Server
+Proxy
+Web 接口	MySQL数据库用户。
+默认情况下，这个值为'zabbix'。
+MYSQL_PASSWORD	Server
+Proxy
+Web 接口	MySQL数据库密码。
+默认情况下，这个值为'zabbix'。
+MYSQL_DATABASE	Server
+Proxy
+Web 接口	Zabbix数据库名称。
+默认情况下，Zabbix server上的这个值为'zabbix'，Zabbix proxy上的这个值为'zabbix_proxy'。
+POSTGRES_USER	Server
+Web 接口	PostgreSQL数据库用户。
+默认情况下，这个值为'zabbix'。
+POSTGRES_PASSWORD	Server
+Web 接口	PostgreSQL数据库密码。
+默认情况下，这个值为'zabbix'。
+POSTGRES_DB	Server
+Web 接口	Zabbix数据库名称。
+默认情况下，Zabbix server上的这个值为'zabbix'，Zabbix proxy上的这个值为'zabbix_proxy'。
+TZ	Web 接口	PHP格式中的时区。所有支持的时区列表，可参见php.net.
+默认情况下，这个值为'Europe/Riga'。
+ZBX_SERVER_NAME	Web 接口	Web界面右上角显示的Zabbix安装名称。
+默认情况下，这个值为'Zabbix Docker'。
+ZBX_JAVAGATEWAY_ENABLE	Server
+Proxy	是否启用Zabbix Java gateway以收集Java相关检查数据。
+默认情况下，这个值为“false”。
+ZBX_ENABLE_SNMP_TRAPS	Server
+Proxy	是否启用SNMP trap功能。这要求zabbix-snmptraps实例，并且共享卷/var/lib/zabbix/snmptraps 给Zabbix server或Zabbix proxy。
+卷（Volumes）
+镜像允许使用一些挂载点。根据Zabbix组件的类型，这些挂载点各不相同：
+
+卷	描述
+Zabbix agent
+    /etc/zabbix/zabbix_agentd.d	这个卷允许包含*.conf文件，并使用UserParameter功能以扩展Zabbix agent。
+    /var/lib/zabbix/modules	这个卷允许加载额外的模块，通过LoadModule功能以扩展Zabbix agent。
+    /var/lib/zabbix/enc	这个卷用于存放TLS相关文件。这些文件名指定指定使用ZBX_TLSCAFILE，ZBX_TLSCRLFILE，ZBX_TLSKEY_FILE和 ZBX_TLSPSKFILE环境变量。
+Zabbix server
+    /usr/lib/zabbix/alertscripts	这个卷用于自定义告警脚本。即zabbix_server.conf中AlertScriptsPath参数。
+    /usr/lib/zabbix/externalscripts	这个卷用于外部检查。即zabbix_server.conf中ExternalScripts参数。
+    /var/lib/zabbix/modules	这个卷允许加载额外的模块，通过LoadModule功能以扩展Zabbix server。
+    /var/lib/zabbix/enc	这个卷用于存放TLS相关文件。这些文件名指定指定使用ZBX_TLSCAFILE，ZBX_TLSCRLFILE，ZBX_TLSKEY_FILE和 ZBX_TLSPSKFILE环境变量。
+    /var/lib/zabbix/ssl/certs	这个卷用于存放用于客户端认证的SSL客户端证书文件。即zabbix_server.conf中SSLCertLocation参数。
+    /var/lib/zabbix/ssl/keys	这个卷用于存放用于客户端认证的SSL私钥文件。即zabbix_server.conf中的SSLKeyLocation参数。
+    /var/lib/zabbix/ssl/ssl_ca	这个卷用于存放用于SSL服务器证书认证的证书颁发机构(CA)文件。即zabbix_server.conf中的SSLCALocation参数。
+    /var/lib/zabbix/snmptraps	这个卷用于存放snmptraps.log文件。在创建Zabbix server实例时，它可以通过zabbix-snmptraps容器被共享，并通过Docker中的volumes_from选项被继承。可以通过共享卷，并切换ZBX_ENABLE_SNMP_TRAPS环境变量的开关为'true'来开启SNMP trap处理功能。
+    /var/lib/zabbix/mibs	这个卷允许添加新的MIB文件。它不支持子目录。所有的MIB文件必须放在/var/lib/zabbix/mibs下。
+Zabbix proxy
+    /usr/lib/zabbix/externalscripts	这个卷用于外部检查。即zabbix_proxy.conf中ExternalScripts参数。
+    /var/lib/zabbix/modules	这个卷允许加载额外的模块，通过LoadModule功能以扩展Zabbix server。
+    /var/lib/zabbix/enc	这个卷用于存放TLS相关文件。这些文件名指定指定使用ZBX_TLSCAFILE，ZBX_TLSCRLFILE，ZBX_TLSKEY_FILE和 ZBX_TLSPSKFILE环境变量。
+    /var/lib/zabbix/ssl/certs	这个卷用于存放用于客户端认证的SSL客户端证书文件。即zabbix_proxy.conf中SSLCertLocation参数。
+    /var/lib/zabbix/ssl/keys	这个卷用于存放用于客户端认证的SSL私钥文件。即zabbix_proxy.conf中SSLKeyLocation参数。
+    /var/lib/zabbix/ssl/ssl_ca	T这个卷用于存放用于SSL服务器证书认证的证书颁发机构(CA)文件。即zabbix_proxy.conf中SSLCALocation参数。
+    /var/lib/zabbix/snmptraps	这个卷用于存放snmptraps.log文件。在创建Zabbix server实例时，它可以通过zabbix-snmptraps容器被共享，并通过Docker中的volumes_from选项被继承。可以通过共享卷，并切换ZBX_ENABLE_SNMP_TRAPS环境变量的开关为'true'来开启SNMP trap处理功能。
+    /var/lib/zabbix/mibs	这个卷允许添加新的MIB文件。它不支持子目录。所有的MIB文件必须放在/var/lib/zabbix/mibs下。
+基于Apache2 web服务器的Zabbix web 接口
+    /etc/ssl/apache2	这个卷允许为Zabbix web接口启用HTTPS功能。这个卷必须包含用于Apache2 SSL连接的两个文件：ssl.crt 和 ssl.key。
+基于Nginx web服务器的Zabbix web 接口
+    /etc/ssl/nginx	这个卷允许为Zabbix web接口启用HTTPS功能。这个卷必须包含用于Nginx SSL连接的两个文件：ssl.crt 和 ssl.key。
+Zabbix snmptraps
+    /var/lib/zabbix/snmptraps	这个卷包含以接收到的SNMP trap命名的snmptraps.log日志文件。
+/var/lib/zabbix/mibs	这个卷允许添加新的MIB文件。它不支持子目录。所有的MIB文件必须放在/var/lib/zabbix/mibs下。
