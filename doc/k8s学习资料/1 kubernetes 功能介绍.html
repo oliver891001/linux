@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>第一章 kubernetes 功能介绍</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+</head>
+<body>
+<h1>kubernetes 的马洛斯需求</h1>
+<p><img src="https://i.imgur.com/mtqtIqs.jpg" alt="image" /></p>
+<hr />
+<h3>kubernetes 架构图</h3>
+<p><img src="https://i.imgur.com/Yrdoo02.jpg" alt="image" /></p>
+<hr />
+<h3>kubernetes 主要基本概念和术语</h3>
+<ul>
+<li>
+<h1>master</h1>
+<ul>
+<li>1. Kubernets API server,提供</li>
+<li>2. Kubernets Controlle Manager (kube-controller-manager),kubernets 里面所有资源对象的自动化控制中心，可以理解为资源对象的大总管。</li>
+<li>3. Kubernets Scheduler (kube-scheduler),负责资源调度（pod调度）的进程，相当去公交公司的‘调度室’ </li>
+</ul>
+</li>
+<li>
+<h1>node</h1>
+每个Node 节点上都运行着以下一组关键进程
+<ul>
+<li>1. kubelet：负责pod对应的容器创建、启停等任务，同时与master 节点密切协作，实现集群管理的基本功能。</li>
+<li>2. kube-proxy:实现kubernetes Service 的通信与负载均衡机制的重要组件。</li>
+<li>3. Docker Engine: Docker 引擎，负责本机的容器创建和管理工作。</li>
+</ul>
+</li>
+<li># pod：</li>
+</ul>
+<p><img src="https://i.imgur.com/aZmrvMd.png" alt="image" /></p>
+<ol>
+<li>Pod是kubernetes中可以创建的最小部署单元</li>
+<li>V1 core版本的Pod的配置模板见<a href="https://rootsongjc.gitbooks.io/kubernetes-handbook/content/manifests/template/pod-v1-template.yaml">Pod Template</a></li>
+<li>
+<p>Example：创建一个tomcat实例</p>
+<p>apiVersion: vl
+kind: Pod
+metadata:
+  name: myweb
+  labels:
+    name: myweb
+spec:
+  containers:</p>
+<ul>
+<li>name: myweb
+  image:	kubeguide/tomcat-app:vl
+  ports:</li>
+<li>containerPort:	8080
+  env:</li>
+<li>
+name: MYSQL<em>SERVICE</em>HOST
+value:	'mysql'
+</li>
+<li>
+name: MYSQL<em>SERVICE</em>PORT
+value:	'3306'
+</li>
+</ul>
+</li>
+<li>
+<h1>label（标签）</h1>
+<ul>
+<li>1. 一个label是一个key=value的简直对，其中key与value由用户自己指定。Label可以附加到各种资源对象上，列入Node、pod、Server、RC 等。</li>
+<li>2. Label 示例如下:</li>
+</ul>
+<p><code>版本标签：release:stable,release:canary
+环境标签：environment:dev,environment:qa,environment:production
+架构标签: tier:frontend,tier:backend,tier:cache
+分区标签：partition:customerA,partition:customerB
+质量管控标签：track:daily,track:weekly</code></p>
+<ul>
+<li>
+<ol>
+<li>Label selector
+Label不是唯一的，很多object可能有相同的label
+通过label selector，客户端／用户可以指定一个object集合，通过label selector对object的集合进行操作。</li>
+<li>
+Label selector有两种类型：
+<ul>
+<li>equality-based ：可以使用=、==、!=操作符，可以使用逗号分隔多个表达式</li>
+<li>et-based ：可以使用in、notin、!操作符，另外还可以没有操作符，直接写出某个label的key，表示过滤有某个key的object而不管该key的value是何值，!表示没有该label的object</li>
+<li>
+示例
+<code>$ kubectl get pods -l 'environment=production,tier=frontend'
+$ kubectl get pods -l 'environment in (production),tier in (frontend)'
+$ kubectl get pods -l 'environment in (production, qa)'
+$ kubectl get pods -l 'environment,environment notin (frontend)'</code>
+</li>
+<li>Label Selector 的作用范围1
+<img src="https://i.imgur.com/BldDxqh.png" alt="image" /></li>
+<li>Label Selector 的作用范围2
+<img src="https://i.imgur.com/lBflUsn.png" alt="image" /></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>
+<h1>Replication Contoller</h1>
+<h3>简述：</h3>
+<p>定义了一个期望的场景，即声明某种Pod的副本数量在任意时刻都符合某个预期值，所以RC的定义包含如下几个场景：</p>
+<ul>
+<li>1. Pod 期待的副本数</li>
+<li>2. 用于筛选Pod的Label Selector</li>
+<li>3. 当pod的副本数量小于预期的时候，用于创建新的Pod的pod模板（Template）</li>
+<li>4. 一个完整的RC示例：</li>
+</ul>
+<p><code>apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+  name: frontend
+  # these labels can be applied automatically
+  # from the labels in the pod template if not set
+  # labels:
+    # app: guestbook
+    # tier: frontend
+spec:
+  # this replicas value is default
+  # modify it according to your case
+  replicas: 3
+  # selector can be applied automatically
+  # from the labels in the pod template if not set,
+  # but we are specifying the selector here to
+  # demonstrate its usage.
+  selector:
+    matchLabels:
+      tier: frontend
+    matchExpressions:
+      - {key: tier, operator: In, values: [frontend]}
+  template:
+    metadata:
+      labels:
+        app: guestbook
+        tier: frontend
+    spec:
+      containers:
+      - name: php-redis
+        image: gcr.io/google_samples/gb-frontend:v3
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        env:
+        - name: GET_HOSTS_FROM
+          value: dns
+          # If your cluster config does not include a dns service, then to
+          # instead access environment variables to find service host
+          # info, comment out the 'value: dns' line above, and uncomment the
+          # line below.
+          # value: env
+        ports:
+        - containerPort: 80</code>       
+</p>
+</li>
+<li>
+<h1>Deployment</h1>
+<ul>
+<li>
+<h3>简述</h3>
+<p>Deployment 为 Pod 和 ReplicaSet 提供了一个声明式定义(declarative)方法，用来替代以前的ReplicationController 来方便的管理应用。</p>
+</li>
+<li>
+<h3>典型的应用场景包括：</h3>
+<ul>
+<li>使用Deployment来创建ReplicaSet。ReplicaSet在后台创建pod。检查启动状态，看它是成功还是失败。</li>
+<li>然后，通过更新Deployment的PodTemplateSpec字段来声明Pod的新状态。这会创建一个新的ReplicaSet，Deployment会按照控制的速率将pod从旧的ReplicaSet移动到新的ReplicaSet中。</li>
+<li>如果当前状态不稳定，回滚到之前的Deployment revision。每次回滚都会更新Deployment的revision。</li>
+<li>扩容Deployment以满足更高的负载。</li>
+<li>暂停Deployment来应用PodTemplateSpec的多个修复，然后恢复上线。</li>
+<li>根据Deployment 的状态判断上线是否hang住了。</li>
+<li>清除旧的不必要的 ReplicaSet。</li>
+</ul>
+</li>
+<li>
+<h3>一个简单的nginx 应用可以定义为：</h3>
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+name: nginx-deployment
+spec:
+  replicas: 3
+  template:
+metadata:
+  labels:
+    app: nginx
+spec:
+  containers:
+<ul>
+<li>name: nginx
+image: nginx:1.7.9
+ports:</li>
+<li>containerPort: 80
+```           </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<h1>Horizontal Pod Autoscaler</h1>
+<ul>
+<li>
+<h3>简述：</h3>
+应用的资源使用率通常都有高峰和低谷的时候，如何削峰填谷，提高集群的整体资源利用率，让service中的Pod个数自动调整呢？这就有赖于Horizontal Pod Autoscaling了，顾名思义，使Pod水平自动缩放。这个Object（跟Pod、Deployment一样都是API resource）也是最能体现kubernetes之于传统运维价值的地方，不再需要手动扩容了，终于实现自动化了，还可以自定义指标，没准未来还可以通过人工智能自动进化呢！
+<img src="https://rootsongjc.gitbooks.io/kubernetes-handbook/content/images/horizontal-pod-autoscaler.png" alt="image" />
+</li>
+<li>
+<h3>Metrics支持</h3>
+<p>在不同版本的API中，HPA autoscale时可以根据以下指标来判断：</p>
+</li>
+<li>
+<p>autoscaling/v1</p>
+<ul>
+<li>CPU</li>
+</ul>
+</li>
+<li>
+autoscaling/v2alpha1
+<ul>
+<li>内存</li>
+<li>
+自定义
+<ul>
+<li>
+kubernetes1.6起支持自定义metrics，但是必须在kube-controller-manager中配置如下两项
+<ul>
+<li>--horizontal-pod-autoscaler-use-rest-clients=true</li>
+<li>--api-server指向kube-aggregator，也可以使用heapster来实现，通过在启动heapster的时候指定--api-server=true。查看kubernetes metrics</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+多种metrics组合
+<ul>
+<li>HPA会根据每个metric的值计算出scale的值，并将最大的那个指作为扩容的最终结果</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一个简单的HPA示例：
+<code>apiVersion: autoscaling/vl
+kind: HorizontalPodAutoscaler
+metadata:
+  name: php-apache
+  namespace: default
+spec:
+  maxReplicas:	5
+  minReplicas:	2
+scaleTargetRef:
+  kind: Deployment
+  name: php-apache
+targetCPUUtilizationPercentage:	90</code>    
+</li>
+</ul>
+</li>
+<li>
+<h1>Service</h1>
+<ul>
+<li>
+简述：
+<ul>
+<li>Kubernetes Service 定义了这样一种抽象：一个 Pod 的逻辑分组，一种可以访问它们的策略 —— 通常称为微服务。 这一组 Pod 能够被 Service 访问到，通常是通过 Label Selector（查看下面了解，为什么可能需要没有 selector 的 Service）实现的。</li>
+</ul>
+</li>
+<li>Pod、 RC 与Service的关系 <img src="https://i.imgur.com/pUYNGrR.png" alt="image" /></li>
+<li>Endpoint: Pod IP + Container Port</li>
+<li>
+<p>一个service 示例</p>
+<pre><code>kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  selector:
+    app: MyApp
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+</code></pre>
+
+</li>
+<li>
+<h3>kubernetes 的服务发现机制</h3>
+<p>Kubernetes 支持2种基本的服务发现模式 —— 环境变量和 DNS。</p>
+</li>
+<li>
+<ul>
+<li>### 环境变量
+当 Pod 运行在 Node 上，kubelet 会为每个活跃的 Service 添加一组环境变量。 它同时支持 Docker links 兼容 变量（查看 makeLinkVariables）、简单的 {SVCNAME}<em>SERVICE</em>HOST 和 {SVCNAME}<em>SERVICE</em>PORT 变量，这里 Service 的名称需大写，横线被转换成下划线。</li>
+</ul>
+</li>
+</ul>
+<p>举个例子，一个名称为 &quot;redis-master&quot; 的 Service 暴露了 TCP 端口 6379，同时给它分配了 Cluster IP 地址 10.0.0.11，这个 Service 生成了如下环境变量：
+<code>REDIS_MASTER_SERVICE_HOST=10.0.0.11
+REDIS_MASTER_SERVICE_PORT=6379
+REDIS_MASTER_PORT=tcp://10.0.0.11:6379
+REDIS_MASTER_PORT_6379_TCP=tcp://10.0.0.11:6379
+REDIS_MASTER_PORT_6379_TCP_PROTO=tcp
+REDIS_MASTER_PORT_6379_TCP_PORT=6379
+REDIS_MASTER_PORT_6379_TCP_ADDR=10.0.0.11</code></p>
+<ol>
+<li>
+<ul>
+<li>### DNS
+kubernets 通过Add-On增值包的方式引入了DNS 系统，把服务名称作为DNS域名，这样一来，程序就可以直接使用服务名来建立通信连接。目前kubernetes上的大部分应用都已经采用了DNS这一种发现机制，在后面的章节中我们会讲述如何部署与使用这套DNS系统。</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>### 外部系统访问service的问题
+为了更加深刻的理解和掌握Kubernetes，我们需要弄明白kubernetes里面的“三种IP”这个关键问题，这三种IP 分别如下：</li>
+</ul>
+</li>
+<li>
+<p>Node IP： Node（物理主机）的IP地址</p>
+</li>
+<li>Pod IP：Pod的IP地址</li>
+<li>Cluster IP： Service 的IP地址</li>
+<li>- ### 服务类型
+对一些应用（如 Frontend）的某些部分，可能希望通过外部（Kubernetes 集群外部）IP 地址暴露 Service。</li>
+</ol>
+<p>Kubernetes ServiceTypes 允许指定一个需要的类型的 Service，默认是 ClusterIP 类型。</p>
+<p>Type 的取值以及行为如下：</p>
+<ul>
+<li>ClusterIP：通过集群的内部 IP 暴露服务，选择该值，服务只能够在集群内部可以访问，这也是默认的 ServiceType</li>
+<li>NodePort：通过每个 Node 上的 IP 和静态端口（NodePort）暴露服务。NodePort 服务会路由到 ClusterIP 服务，这个 ClusterIP 服务会自动创建。通过请求 <NodeIP>:<NodePort>，可以从集群的外部访问一个 NodePort 服务</li>
+<li>LoadBalancer：使用云提供商的负载均衡器，可以向外部暴露服务。外部的负载均衡器可以路由到 NodePort 服务和 ClusterIP 服务。</li>
+<li>
+ExternalName：通过返回 CNAME 和它的值，可以将服务映射到 externalName 字段的内容（例如， foo.bar.example.com）。 没有任何类型代理被创建，这只有 Kubernetes 1.7 或更高版本的 kube-dns 才支持。
+<ul>
+<li>
+一个Node Port 的简单示例
+```
+apiVersion: vl
+kind: Service
+metadata;
+  name:	tomcat-service
+spec:
+  type: NodePort
+  ports:
+<ul>
+<li>port:	8080
+nodePort: 31002
+selector:
+tier: frontend
+```    </li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<h1>Volume 存储卷</h1>
+<ul>
+<li>简述</li>
+</ul>
+<p>我们知道默认情况下容器的数据都是非持久化的，在容器消亡以后数据也跟着丢失，所以Docker提供了Volume机制以便将数据持久化存储。类似的，Kubernetes提供了更强大的Volume机制和丰富的插件，解决了容器数据持久化和容器间共享数据的问题</p>
+<ol>
+<li>
+<ul>
+<li>Volume
+ 目前，Kubernetes支持以下Volume类型：
+```</li>
+<li>emptyDir</li>
+<li>hostPath</li>
+<li>gcePersistentDisk</li>
+<li>awsElasticBlockStore</li>
+<li>nfs</li>
+<li>iscsi</li>
+<li>flocker</li>
+<li>glusterfs</li>
+<li>rbd</li>
+<li>cephfs</li>
+<li>gitRepo</li>
+<li>secret</li>
+<li>persistentVolumeClaim</li>
+<li>downwardAPI</li>
+<li>azureFileVolume</li>
+<li>vsphereVolume</li>
+<li>flexvolume  <br />
+```        </li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>注意，这些volume并非全部都是持久化的，比如emptyDir、secret、gitRepo等，这些volume会随着Pod的消亡而消失</p>
+</blockquote>
+<ol>
+<li>- PersistentVolume</li>
+</ol>
+<p>对于持久化的Volume，PersistentVolume (PV)和PersistentVolumeClaim (PVC)提供了更方便的管理卷的方法：PV提供网络存储资源，而PVC请求存储资源。这样，设置持久化的工作流包括配置底层文件系统或者云数据卷、创建持久性数据卷、最后创建claim来将pod跟数据卷关联起来。PV和PVC可以将pod和数据卷解耦，pod不需要知道确切的文件系统或者支持它的持久化引擎。</p>
+<ol>
+<li>
+<ul>
+<li>
+PV
+PersistentVolume（PV）是集群之中的一块网络存储。跟 Node 一样，也是集群的资源。PV 跟 Volume (卷) 类似，不过会有独立于 Pod 的生命周期。比如一个本地的PV可以定义为
+```
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: grafana-pv-volume
+  labels:
+type: local
+spec:
+  storageClassName: grafana-pv-volume
+  capacity:
+storage: 10Gi
+accessModes:
+<ul>
+<li>ReadWriteOnce
+persistentVolumeReclaimPolicy: Recycle
+hostPath:
+path: &quot;/data/volume/grafana&quot;
+``` 
+pv的访问模式有三种</li>
+</ul>
+</li>
+<li>第一种，ReadWriteOnce：是最基本的方式，可读可写，但只支持被单个Pod挂载。</li>
+<li>第二种，ReadOnlyMany：可以以只读的方式被多个Pod挂载。</li>
+<li>第三种，ReadWriteMany：这种存储可以以读写的方式被多个Pod共享。不是每一种存储都支持这三种方式，像共享方式，目前支持的还比较少，比较常用的是NFS。在PVC绑定PV时通常根据两个条件来绑定，一个是存储的大小，另一个就是访问模式</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>StorageClass</li>
+</ul>
+</li>
+</ol>
+<p>上面通过手动的方式创建了一个NFS Volume，这在管理很多Volume的时候不太方便。Kubernetes还提供了StorageClass来动态创建PV，不仅节省了管理员的时间，还可以封装不同类型的存储供PVC选用。</p>
+<ul>
+<li>
+Ceph RBD的例子：
+<code>apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: fast
+provisioner: kubernetes.io/rbd
+parameters:
+  monitors: 10.16.153.105:6789
+  adminId: kube
+  adminSecretName: ceph-secret
+  adminSecretNamespace: kube-system
+  pool: kube
+  userId: kube
+  userSecretName: ceph-secret-user</code>
+</li>
+<li>- PVC</li>
+</ul>
+<p>PV是存储资源，而PersistentVolumeClaim (PVC) 是对PV的请求。PVC跟Pod类似：Pod消费Node的源，而PVC消费PV资源；Pod能够请求CPU和内存资源，而PVC请求特定大小和访问模式的数据卷。
+<code>kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: grafana-pvc-volume
+  namespace: &quot;monitoring&quot;
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: grafana-pv-volume</code><br />
+PVC可以直接挂载到Pod中：
+<code>kind: Pod
+apiVersion: v1
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: dockerfile/nginx
+      volumeMounts:
+      - mountPath: &quot;/var/www/html&quot;
+        name: mypd
+  volumes:
+    - name: mypd
+      persistentVolumeClaim:
+        claimName: grafana-pvc-volume</code>        
+</p>
+<ol>
+<li>
+<ul>
+<li>
+<p>其他volume 说明</p>
+</li>
+<li>
+<p>NFS          <br />
+NFS 是Network File System的缩写，即网络文件系统。Kubernetes中通过简单地配置就可以挂载NFS到Pod中，而NFS中的数据是可以永久保存的，同时NFS支持同时写操作。
+```
+volumes:</p>
+</li>
+<li>
+name: nfs
+  nfs:
+<h1>FIXME: use the right hostname</h1>
+server: 10.254.234.223
+path: &quot;/data&quot;
+```    
+</li>
+<li>emptyDir</li>
+</ul>
+<p>如果Pod配置了emptyDir类型Volume， Pod 被分配到Node上时候，会创建emptyDir，只要Pod运行在Node上，emptyDir都会存在（容器挂掉不会导致emptyDir丢失数据），但是如果Pod从Node上被删除（Pod被删除，或者Pod发生迁移），emptyDir也会被删除，并且永久丢失。
+```
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pd
+spec:
+  containers:</p>
+<ul>
+<li>
+image: gcr.io/google_containers/test-webserver
+name: test-container
+volumeMounts:
+<ul>
+<li>mountPath: /test-pd
+  name: test-volume
+volumes:</li>
+</ul>
+</li>
+<li>
+name: test-volume
+emptyDir: {}
+```
+</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>
+<h1>namespace</h1>
+<ul>
+<li>
+<p>简述</p>
+<p>在一个Kubernetes集群中可以使用namespace创建多个“虚拟集群”，这些namespace之间可以完全隔离，也可以通过某种方式，让一个namespace中的service可以访问到其他的namespace中的服务，我们在CentOS中部署kubernetes1.6集群的时候就用到了好几个跨越namespace的服务，比如Traefik ingress和kube-systemnamespace下的service就可以为整个集群提供服务，这些都需要通过RBAC定义集群级别的角色来实现。</p>
+</li>
+<li>哪些情况下适合使用多个namesapce</li>
+</ul>
+<p>因为namespace可以提供独立的命名空间，因此可以实现部分的环境隔离。当你的项目和人员众多的时候可以考虑根据项目属性，例如生产、测试、开发划分不同的namespace。</p>
+<ul>
+<li>
+<p>Namespace使用，获取集群中有哪些namespace</p>
+<p><code>kubectl get ns</code></p>
+<p>集群中默认会有default和kube-system这两个namespace。</p>
+<p>在执行kubectl命令时可以使用-n指定操作的namespace。</p>
+<p>用户的普通应用默认是在default下，与集群管理相关的为整个集群提供服务的应用一般部署在kube-system的namespace下，例如我们在安装kubernetes集群时部署的kubedns、heapseter、EFK等都是在这个namespace下面。</p>
+<p>另外，并不是所有的资源对象都会对应namespace，node和persistentVolume就不属于任何namespace。</p>
+</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h1>CI/CD 部署应用</h1>
+<p><img src="https://github.com/rootsongjc/kubernetes-handbook/blob/master/images/spark-on-yarn-with-kubernetes.png?raw=true" alt="image" /></p>
+<h3>流程说明</h3>
+<p>应用构建和发布流程说明。</p>
+<ol>
+<li>用户向Gitlab提交代码，代码中必须包含Dockerfile</li>
+<li>将代码提交到远程仓库</li>
+<li>用户在发布应用时需要填写git仓库地址和分支、服务类型、服务名称、资源数量、实例个数，确定后触发Jenkins自动构建</li>
+<li>Jenkins的CI流水线自动编译代码并打包成docker镜像推送到Harbor镜像仓库</li>
+<li>Jenkins的CI流水线中包括了自定义脚本，根据我们已准备好的kubernetes的YAML模板，将其中的变量替换成用户输入的选项</li>
+<li>生成应用的kubernetes YAML配置文件</li>
+<li>更新Ingress的配置，根据新部署的应用的名称，在ingress的配置文件中增加一条路由信息</li>
+<li>更新PowerDNS，向其中插入一条DNS记录，IP地址是边缘节点的IP地址。关于边缘节点，请查看边缘节点配置</li>
+<li>Jenkins调用kubernetes的API，部署应用</li>
+</ol>
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->

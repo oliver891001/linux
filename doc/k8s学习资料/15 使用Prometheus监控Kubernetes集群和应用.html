@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>第十五章 使用Prometheus监控Kubernetes集群和应用</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+</head>
+<body>
+<h1>实战 | 使用Prometheus监控Kubernetes集群和应用</h1>
+<h3>一、环境准备</h3>
+<hr />
+<p>必要的环境：</p>
+<ul>
+<li>
+<p>Kubernetes集群，版本1.4以上</p>
+</li>
+<li>
+<p>相关镜像准备:</p>
+<ul>
+<li>
+<p>gcr.io/google_containers/kube-state-metrics:v0.5.0</p>
+</li>
+<li>
+<p>prom/prometheus:v1.7.0</p>
+</li>
+<li>
+<p>prom/node-exporter:v0.14.0</p>
+</li>
+<li>
+<p>giantswarm/tiny-tools</p>
+</li>
+<li>
+<p>dockermuenster/caddy:0.9.3</p>
+</li>
+<li>
+<p>grafana/grafana:4.2.0</p>
+</li>
+<li>
+<p>quay.io/prometheus/alertmanager:v0.7.1</p>
+</li>
+</ul>
+<p>可以在这里<a href="prom.tar">下载</a>所有镜像。</p>
+</li>
+<li>
+<p>将上述镜像下载到本地后，使用<code>docker load</code>命令加载到<em>Kubernetes</em>每台Node节点上。</p>
+</li>
+</ul>
+<h3>二、Prometheus介绍</h3>
+<hr />
+<p><em>Prometheus</em>由SoundCloud开源的监控系统，它与<em>Kubernetes<em>是</em></em>CNCF**组织最初的两个项目，</p>
+<p><em>Prometheus</em>很大程度上受到了<em>Google<em>的</em>Borgmon</em>系统启发，与传统的监控方式不同，<em>Prometheus</em>使用<strong>拉(Pull)</strong>的方式。</p>
+<p><em>Prometheus</em>是一个监控系统，它不仅仅包含了时间序列数据库，还有全套的抓取、检索、绘图、报警的功能。</p>
+<p>下图是<em>Prometheus</em>的架构图：</p>
+<p><img src="https://github.com/lth2015/TechNotes/blob/master/Monitoring%20kubernetes%20with%20prometheus/arch.jpeg?raw=true" /></p>
+<p>更多细节请访问<a href="https://prometheus.io/docs/introduction/overview/"><em>Prometheus</em>官方网站</a></p>
+<h3>三、监控组件安装</h3>
+<hr />
+<p>下载<em>Prometheus</em>的部署文件:<a href="manifests-all.yaml">manifests-all.yaml</a>，使用<code>kubectl</code>命令创建<em>Prometheus</em>各个组件：</p>
+<p><code>bash
+kubectl create -f manifests-all.yaml</code></p>
+<p>执行完成后，<em>Kubernetes</em>集群中会出现一个新的<em>Namespace</em>: &quot;monitoring&quot;，里面有很多组件：</p>
+<p>```bash
+kubectl get pods,svc,deployment,job,daemonset,ingress --namespace=monitoring</p>
+<p>NAME                                     READY     STATUS    RESTARTS   AGE
+po/alertmanager-3874563995-fqvet         1/1       Running   1          1d
+po/grafana-core-741762473-exne3          1/1       Running   1          2d
+po/kube-state-metrics-1381605391-hiqti   1/1       Running   1          1d
+po/kube-state-metrics-1381605391-j11e6   1/1       Running   1          2d
+po/node-directory-size-metrics-0abcp     2/2       Running   2          16d
+po/node-directory-size-metrics-6xmzk     2/2       Running   2          16d
+po/node-directory-size-metrics-d5cka     2/2       Running   2          16d
+po/node-directory-size-metrics-ojo1x     2/2       Running   2          16d
+po/node-directory-size-metrics-rdvn8     2/2       Running   2          16d
+po/node-directory-size-metrics-tfqox     2/2       Running   2          16d
+po/node-directory-size-metrics-wkec1     2/2       Running   2          16d
+po/prometheus-core-4080573952-vu2dg      1/1       Running   49         1d
+po/prometheus-node-exporter-1dnvp        1/1       Running   1          16d
+po/prometheus-node-exporter-64763        1/1       Running   1          16d
+po/prometheus-node-exporter-6h6u0        1/1       Running   1          16d
+po/prometheus-node-exporter-i29ic        1/1       Running   1          16d
+po/prometheus-node-exporter-i6mvh        1/1       Running   1          16d
+po/prometheus-node-exporter-lxqou        1/1       Running   1          16d
+po/prometheus-node-exporter-n1n8y        1/1       Running   1          16d
+NAME                           CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+svc/alertmanager               192.168.3.247   <nodes>       9093/TCP   16d
+svc/grafana                    192.168.3.89    <nodes>       3000/TCP   16d
+svc/kube-state-metrics         192.168.3.78    <none>        8080/TCP   16d
+svc/prometheus                 192.168.3.174   <nodes>       9090/TCP   16d
+svc/prometheus-node-exporter   None            <none>        9100/TCP   16d
+NAME                        DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+deploy/alertmanager         1         1         1            1           16d
+deploy/grafana-core         1         1         1            1           16d
+deploy/kube-state-metrics   2         2         2            2           16d
+deploy/prometheus-core      1         1         1            1           16d
+NAME                             DESIRED   SUCCESSFUL   AGE
+jobs/grafana-import-dashboards   1         1            16d
+NAME                             DESIRED   CURRENT   NODE-SELECTOR   AGE
+ds/node-directory-size-metrics   7         7         <none>          16d
+ds/prometheus-node-exporter      7         7         <none>          16d
+NAME          HOSTS                ADDRESS   PORTS     AGE
+ing/grafana   grafana.yeepay.com             80        16d
+```</p>
+<p><em>manifests-all.yaml</em>文件中使用30161和30162的<em>Nodeport<em>端口作为</em>Grafana</em>和<em>Prometheus</em> Web界面的访问端口。</p>
+<h3>四、监控初始化</h3>
+<hr />
+<h4>1、 登录<em>Grafana</em></h4>
+<hr />
+<p>通过<a href="">http://${Your<em>API</em>SERVER_IP}:30161/</a>登录<em>Grafana</em>，默认的用户名和密码都是<em>admin</em>，登录如下图所示：</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/login.png" /></p>
+<h4>2、添加数据源</h4>
+<hr />
+<p>点击左上角图标，找到<em>DataSource</em>选项，添加数据源：</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/datasource.png" /></p>
+<h4>3、添加<em>Prometheus</em>的数据源</h4>
+<hr />
+<p>将<em>Prometheus</em>的作为数据源的相关参数如下图所示：</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/prometheus-ds.png" /></p>
+<p>点击<em>Save &amp; Test</em>按钮，保存数据源。</p>
+<h4>五、监控<em>Kubernetes</em>集群</h4>
+<hr />
+<h4>1、导入模板文件：</h4>
+<hr />
+<p>点击左上角<em>Grafana</em>的图标，选在<em>Dashboard</em>选项：</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/dashboard.png" /></p>
+<p>点击<em>Import</em>导入监控模板：</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/import.png" /></p>
+<p>可以从<a href="https://grafana.com/dashboards">这里</a>下载各种监控模板，然后使用<em>Upload</em>到<em>Grafana</em>:</p>
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/upload.png" /></p>
+<h4>2、Kubernetes集群监控实例</h4>
+<hr />
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/k8scluster.png" /></p>
+<p>下载此监控模板：<a href="grafana/kubernetes-cluster-monitoring-via-prometheus_rev2.json">kubernetes-cluster-monitoring-via-prometheus_rev2.json</a></p>
+<h4>3、Deployment级别监控实例</h4>
+<hr />
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/k8sdeploymetrics.png" /></p>
+<p>下载此监控模板：<a href="grafana/deployment-metrics_rev1.json">deployment-metrics_rev1.json</a></p>
+<h4>4、Pod级别资源监控实例</h4>
+<hr />
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/grafanapod.png" /></p>
+<p>下载此监控模板：<a href="grafana/pod-metrics_rev2.json">pod-metrics_rev2.json</a></p>
+<h4>5、App级别的资源、请求量监控实例</h4>
+<hr />
+<p><img src="https://github.com/lth2015/TechNotes/raw/master/Monitoring%20kubernetes%20with%20prometheus/appmetrics.png" /></p>
+<p>下载此监控模板：<a href="grafana/kubernetes-apps_rev1.json">kubernetes-apps_rev1.json</a></p>
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->

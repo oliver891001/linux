@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>第七章 部署k8s-master-v1.7.6节点</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+</head>
+<body>
+<h3>kubernetes master 节点包含的组件：</h3>
+<ul>
+<li>kube-apiserver</li>
+<li>kube-scheduler</li>
+<li>kube-controller-manager</li>
+</ul>
+<p>目前这三个组件需要部署在同一台机器上。</p>
+<ul>
+<li>kube-scheduler、kube-controller-manager 和 kube-apiserver 三者的功能紧密相关；</li>
+<li>同时只能有一个 kube-scheduler、kube-controller-manager 进程处于工作状态，如果运行多个，则需要通过选举产生一个 leader；</li>
+</ul>
+<h3>验证TLS 证书文件及token.csv文件</h3>
+<p>pem和token.csv证书文件我们在TLS证书和秘钥这一步中已经创建过了。我们再检查一下。</p>
+<pre><code> ls /etc/kubernetes/ssl
+admin-key.pem  admin.pem  ca-key.pem  ca.pem  kube-proxy-key.pem  kube-proxy.pem  kubernetes-key.pem  kubernetes.pem
+ls /etc/kubernetes/token.csv
+</code></pre>
+
+<h3>下载最新版本的二进制文件</h3>
+<p>从 <a href="https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG.md">github release</a> 页面 下载发布版 tarball，解压后再执行下载脚本</p>
+<pre><code>wget https://dl.k8s.io/v1.7.6/kubernetes-server-linux-amd64.tar.gz
+tar xf /root/k8s/kubernetes-server-linux-amd64.tar.gz -C /usr/local/
+cat &gt; /etc/profile.d/kube-apiserver.sh &lt;&lt; EOF
+export PATH=/usr/local/kubernetes/server/bin:$PATH
+EOF
+</code></pre>
+
+<h3>配置和启动 kube-apiserver</h3>
+<p>serivce配置文件/usr/lib/systemd/system/kube-apiserver.service内容</p>
+<pre><code>cat  /usr/lib/systemd/system/kube-apiserver.service 
+[Unit]
+Description=Kubernetes API Service
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+After=etcd.service
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/apiserver
+ExecStart=/usr/local/kubernetes/server/bin/kube-apiserver \
+        $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_ETCD_SERVERS \
+        $KUBE_API_ADDRESS \
+        $KUBE_API_PORT \
+        $KUBELET_PORT \
+        $KUBE_ALLOW_PRIV \
+        $KUBE_SERVICE_ADDRESSES \
+        $KUBE_ADMISSION_CONTROL \
+        $KUBE_API_ARGS
+Restart=on-failure
+Type=notify
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<h4>/etc/kubernetes/config文件的内容为：</h4>
+<pre><code>cat   config 
+
+
+###
+# kubernetes system config
+#
+# The following values are used to configure various aspects of all
+# kubernetes services, including
+#
+#   kube-apiserver.service
+#   kube-controller-manager.service
+#   kube-scheduler.service
+#   kubelet.service
+#   kube-proxy.service
+# logging to stderr means we get it in the systemd journal
+KUBE_LOGTOSTDERR=&quot;--logtostderr=true&quot;
+
+# journal message level, 0 is debug
+KUBE_LOG_LEVEL=&quot;--v=0&quot;
+
+# Should this cluster be allowed to run privileged docker containers
+KUBE_ALLOW_PRIV=&quot;--allow-privileged=true&quot;
+
+# How the controller-manager, scheduler, and proxy find the apiserver
+#KUBE_MASTER=&quot;--master=http://sz-pg-oam-docker-test-001.tendcloud.com:8080&quot;
+KUBE_MASTER=&quot;--master=http://172.16.200.216:8080&quot;
+</code></pre>
+
+<blockquote>
+<p>注意：该配置文件同时被kube-apiserver、kube-controller-manager、kube-scheduler、kubelet、kube-proxy使用。    
+</p>
+</blockquote>
+<h4>apiserver配置文件/etc/kubernetes/apiserver内容为：</h4>
+<pre><code>cat  apiserver 
+
+
+###
+## kubernetes system config
+##
+## The following values are used to configure the kube-apiserver
+##
+#
+## The address on the local server to listen to.
+#KUBE_API_ADDRESS=&quot;--insecure-bind-address=sz-pg-oam-docker-test-001.tendcloud.com&quot;
+KUBE_API_ADDRESS=&quot;--advertise-address=172.16.200.216 --bind-address=172.16.200.216 --insecure-bind-address=172.16.200.216&quot;
+#
+## The port on the local server to listen on.
+#KUBE_API_PORT=&quot;--port=8080&quot;
+#
+## Port minions listen on
+#KUBELET_PORT=&quot;--kubelet-port=10250&quot;
+#
+## Comma separated list of nodes in the etcd cluster
+KUBE_ETCD_SERVERS=&quot;--etcd-servers=http://172.16.200.100:2379,http://172.16.200.101:2379,http://172.16.200.102:2379&quot;
+#
+## Address range to use for services
+KUBE_SERVICE_ADDRESSES=&quot;--service-cluster-ip-range=10.254.0.0/16&quot;
+#
+## default admission control policies
+KUBE_ADMISSION_CONTROL=&quot;--admission-control=ServiceAccount,NamespaceLifecycle,NamespaceExists,LimitRanger,ResourceQuota&quot;
+#
+## Add your own!
+
+KUBE_API_ARGS=&quot;--authorization-mode=RBAC --runtime-config=rbac.authorization.k8s.io/v1beta1 --kubelet-https=true --experimental-bootstrap-token-auth --token-auth-file=/etc/kubernetes/token.csv --service-node-port-range=30000-32767 --tls-cert-file=/etc/kubernetes/ssl/kubernetes.pem --tls-private-key-file=/etc/kubernetes/ssl/kubernetes-key.pem --client-ca-file=/etc/kubernetes/ssl/ca.pem --service-account-key-file=/etc/kubernetes/ssl/ca-key.pem --etcd-cafile=/etc/kubernetes/ssl/ca.pem --etcd-certfile=/etc/kubernetes/ssl/kubernetes.pem --etcd-keyfile=/etc/kubernetes/ssl/kubernetes-key.pem --enable-swagger-ui=true --apiserver-count=3 --audit-log-maxage=30 --audit-log-maxbackup=3 --audit-log-maxsize=100 --audit-log-path=/var/lib/audit.log --event-ttl=1h --log-dir=/data/logs/kubernetes/ --v=2 --logtostderr=false&quot;
+</code></pre>
+
+<ul>
+<li>--authorization-mode=RBAC 指定在安全端口使用 RBAC 授权模式，拒绝未通过授权的请求；</li>
+<li>kube-scheduler、kube-controller-manager 一般和 kube-apiserver 部署在同一台机器上，它们使用非安全端口和 kube-apiserver通信;</li>
+<li>kubelet、kube-proxy、kubectl 部署在其它 Node 节点上，如果通过安全端口访问 kube-apiserver，则必须先通过 TLS 证书认证，再通过 RBAC 授权；</li>
+<li>kube-proxy、kubectl 通过在使用的证书里指定相关的 User、Group 来达到通过 RBAC 授权的目的；</li>
+<li>如果使用了 kubelet TLS Boostrap 机制，则不能再指定 --kubelet-certificate-authority、--kubelet-client-certificate 和 --kubelet-client-key 选项，否则后续 kube-apiserver 校验 kubelet 证书时出现 ”x509: certificate signed by unknown authority“ 错误；</li>
+<li>--admission-control 值必须包含 ServiceAccount；</li>
+<li>--bind-address 不能为 127.0.0.1；</li>
+<li>runtime-config配置为rbac.authorization.k8s.io/v1beta1，表示运行时的apiVersion；</li>
+<li>--service-cluster-ip-range 指定 Service Cluster IP 地址段，该地址段不能路由可达；</li>
+</ul>
+<h2>- 缺省情况下 kubernetes 对象保存在 etcd /registry 路径下，可以通过 --etcd-prefix 参数进行调整；</h2>
+<h4>启动kube-apiserver</h4>
+<pre><code>systemctl daemon-reload
+systemctl enable kube-apiserver
+systemctl start kube-apiserver
+systemctl status kube-apiserver
+</code></pre>
+
+<h3>配置和启动 kube-controller-manager</h3>
+<p>创建 kube-controller-manager的serivce配置文件</p>
+<pre><code> cat /usr/lib/systemd/system/kube-controller-manager.service 
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/controller-manager
+ExecStart=/usr/local/kubernetes/server/bin/kube-controller-manager \
+        $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_MASTER \
+        $KUBE_CONTROLLER_MANAGER_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p>配置文件/etc/kubernetes/controller-manager</p>
+<pre><code>cat  controller-manager 
+
+###
+# The following values are used to configure the kubernetes controller-manager
+
+# defaults from config and apiserver should be adequate
+
+# Add your own!
+KUBE_CONTROLLER_MANAGER_ARGS=&quot;--address=127.0.0.1 --service-cluster-ip-range=10.254.0.0/16 --cluster-name=kubernetes --cluster-signing-cert-file=/etc/kubernetes/ssl/ca.pem --cluster-signing-key-file=/etc/kubernetes/ssl/ca-key.pem  --service-account-private-key-file=/etc/kubernetes/ssl/ca-key.pem  --root-ca-file=/etc/kubernetes/ssl/ca.pem --leader-elect=true --log-dir=/data/logs/kubernetes/ --v=2 --logtostderr=false&quot;
+</code></pre>
+
+<hr />
+<pre><code>--service-cluster-ip-range 参数指定 Cluster 中 Service 的CIDR范围，该网络在各 Node 间必须路由不可达，必须和 kube-apiserver 中的参数一致；
+--cluster-signing-* 指定的证书和私钥文件用来签名为 TLS BootStrap 创建的证书和私钥；
+--root-ca-file 用来对 kube-apiserver 证书进行校验，指定该参数后，才会在Pod 容器的 ServiceAccount 中放置该 CA 证书文件；
+--address 值必须为 127.0.0.1，因为当前 kube-apiserver 期望 scheduler 和 controller-manager 在同一台机器,否则机器不能选举
+--leader-elect=true 允许集群选举
+</code></pre>
+
+<h3>启动 kube-controller-manager</h3>
+<pre><code>systemctl daemon-reload
+systemctl enable kube-controller-manager
+systemctl start kube-controller-manager
+</code></pre>
+
+<h3>配置和启动 kube-scheduler</h3>
+<p>创建 kube-scheduler的serivce配置文件</p>
+<pre><code>cat  /usr/lib/systemd/system/kube-scheduler.service 
+[Unit]
+Description=Kubernetes Scheduler Plugin
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+
+[Service]
+EnvironmentFile=-/etc/kubernetes/config
+EnvironmentFile=-/etc/kubernetes/scheduler
+ExecStart=/usr/local/kubernetes/server/bin/kube-scheduler \
+        $KUBE_LOGTOSTDERR \
+        $KUBE_LOG_LEVEL \
+        $KUBE_MASTER \
+        $KUBE_SCHEDULER_ARGS
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+
+<p>kube-scheduler配置文件</p>
+<pre><code>###
+# kubernetes scheduler config
+
+# default config should be adequate
+
+# Add your own!
+KUBE_SCHEDULER_ARGS=&quot;--leader-elect=true --address=127.0.0.1 --log-dir=/data/logs/kubernetes/ --v=2 --logtostderr=false&quot;
+EOF
+</code></pre>
+
+<ul>
+<li>--address 值必须为 127.0.0.1，因为当前 kube-apiserver 期望 scheduler 和 controller-manager 在同一台机器；</li>
+</ul>
+<h3>启动 kube-scheduler</h3>
+<pre><code>systemctl daemon-reload
+systemctl enable kube-scheduler
+systemctl start kube-scheduler
+</code></pre>
+
+<h3>验证 master 节点功能</h3>
+<pre><code>kubectl get componentstatuses
+NAME                 STATUS    MESSAGE              ERROR
+controller-manager   Healthy   ok
+scheduler            Healthy   ok
+etcd-0               Healthy   {&quot;health&quot;: &quot;true&quot;}
+etcd-1               Healthy   {&quot;health&quot;: &quot;true&quot;}
+etcd-2               Healthy   {&quot;health&quot;: &quot;true&quot;}
+</code></pre>
+
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->

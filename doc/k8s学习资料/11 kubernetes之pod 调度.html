@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>第十一章 kubernetes之pod 调度</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+</head>
+<body>
+<h1>kubernetes pod 调度</h1>
+<h3>简述</h3>
+<p>Kubernetes调度器根据特定的算法与策略将pod调度到工作节点上。在默认情况下，Kubernetes调度器可以满足绝大多数需求，例如调度pod到资源充足的节点上运行，或调度pod分散到不同节点使集群节点资源均衡等。但一些特殊的场景，默认调度算法策略并不能满足实际需求，例如使用者期望按需将某些pod调度到特定硬件节点(数据库服务部署到SSD硬盘机器、CPU/内存密集型服务部署到高配CPU/内存服务器），或就近部署交互频繁的pod（例如同一机器、同一机房、或同一网段等）。</p>
+<p>Kubernetes中的调度策略主要分为全局调度与运行时调度2种。其中全局调度策略在调度器启动时配置，而运行时调度策略主要包括选择节点（nodeSelector），节点亲和性（nodeAffinity），pod亲和与反亲和性（podAffinity与podAntiAffinity）。Node Affinity、podAffinity/AntiAffinity以及后文即将介绍的污点(Taints）与容忍（tolerations）等特性，在Kuberntes1.6中均处于Beta阶段。</p>
+<p>node 添加标签 </p>
+<pre><code>kubectl label nodes 172.16.200.101 disktype=ssd
+</code></pre>
+
+<p>查看node 节点标签（label）</p>
+<pre><code>kubectl get node --show-labels
+</code></pre>
+
+<p>删除一个label</p>
+<pre><code>kubectl label node 172.16.200.101 disktype-
+</code></pre>
+
+<p>修改一个label</p>
+<pre><code># kubectl label node 172.16.200.101 disktype=scsi --overwrite
+</code></pre>
+
+<h3>选择节点（nodeselector）</h3>
+<pre><code>apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redis-master
+  labels:
+    name: redis-master
+spec:
+  replicas: 1
+  selector:
+    name: redis-master
+  template:
+    metadata:
+      labels:
+        name: redis-master
+    spec:
+      containers:
+      - name: master
+        image: kubeguide/redis-master
+        ports:
+        - containerPort: 6379
+      nodeSelector:
+        disktype: ssd
+</code></pre>
+
+<h2>亲和性（Affinity）与非亲和性（anti-affinity）</h2>
+<p>前面提及的nodeSelector，其仅以一种非常简单的方式、即label强制限制pod调度到指定节点。而亲和性（Affinity）与非亲和性（anti-affinity）则更加灵活的指定pod调度到预期节点上，相比nodeSelector，Affinity与anti-affinity优势体现在：</p>
+<ul>
+<li>表述语法更加多样化，不再仅受限于强制约束与匹配。</li>
+<li>调度规则不再是强制约束（hard），取而代之的是软限（soft）或偏好（preference）。</li>
+<li>指定pod可以和哪些pod部署在同一个/不同拓扑结构下。</li>
+</ul>
+<p>亲和性主要分为3种类型：node affinity与inter-pod affinity/anti-affinity，下文会进行详细说明。</p>
+<h3>节点亲和性（Node affinity）</h3>
+<p>Node affinity在Kubernetes 1.2做为alpha引入，其涵盖了nodeSelector功能，主要分为requiredDuringSchedulingIgnoredDuringExecution与preferredDuringSchedulingIgnoredDuringExecution 2种类型。前者可认为一种强制限制，如果 Node 的标签发生了变化导致其没有符合 Pod 的调度要求节点，那么pod调度就会失败。而后者可认为理解为软限或偏好，同样如果 Node 的标签发生了变化导致其不再符合 pod 的调度要求，pod 依然会调度运行。</p>
+<p>Node affinity举例 </p>
+<p>设置节点label：</p>
+<pre><code> kubectl label node 172.16.200.100 cpu=high
+ kubectl label node 172.16.200.101 cpu=mid
+ kubectl label node 172.16.200.102 cpu=low
+</code></pre>
+
+<p>部署pod的预期是到CPU高配的机器上(cpu=high)。</p>
+<p>查看满足条件节点：</p>
+<pre><code>kubectl get nodes -l 'cpu=high'
+</code></pre>
+
+<p>redis-master.yaml 文件内容如下</p>
+<pre><code>apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redis-master
+  labels:
+    name: redis-master
+spec:
+  replicas: 1
+  selector:
+    name: redis-master
+  template:
+    metadata:
+      labels:
+        name: redis-master
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: cpu
+                operator: In
+                values:
+                - high
+      containers:
+      - name: master
+        image: kubeguide/redis-master
+        ports:
+        - containerPort: 6379
+</code></pre>
+
+<p>检查结果符合预期，pod nginx成功部署到非master节点且CPU高配的机器上。  </p>
+<pre><code># kubectl get pod -o wide
+NAME                 READY     STATUS    RESTARTS   AGE       IP           NODE
+redis-master-lbz9f   1/1       Running   0          11s       10.24.77.4   172.16.200.100
+</code></pre>
+
+<h3>pod亲和性（Inter-pod affinity）与反亲和性（anti-affinity）</h3>
+<p>inter-pod affinity与anti-affinity由Kubernetes 1.4引入，当前处于beta阶段，其中podAffinity用于调度pod可以和哪些pod部署在同一拓扑结构之下。而podAntiAffinity相反，其用于规定pod不可以和哪些pod部署在同一拓扑结构下。通过pod affinity与anti-affinity来解决pod和pod之间的关系。
+与Node affinity类似，pod affinity与anti-affinity同样分为requiredDuringSchedulingIgnoredDuringExecution and preferredDuringSchedulingIgnoredDuringExecution等2种类型，前者被认为是强制约束，而后者后者可认为理解软限（soft）或偏好（preference）。</p>
+<p>pod affinity与anti-affinity举例</p>
+<p>本示例中假设部署场景为：期望redis-slave服务与redis-master服务就近部署，而不希望与frontend服务部署同一拓扑结构上。</p>
+<p>redis-slave yaml文件部分内容：</p>
+<pre><code>apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: redis-slave
+spec:
+  replicas: 2
+  selector:
+    name: redis-slave
+  template:
+    metadata:
+      name: redis-slave
+      labels:
+        name: redis-slave
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: name
+                operator: In
+                values:
+                - redis-master
+            topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: name
+                  operator: In
+                  values:
+                  - frontend
+              topologyKey: beta.kubernetes.io/os
+      containers:
+      - name: redis-slave
+        image: kubeguide/guestbook-redis-slave
+        env:
+        - name: GET_HOSTS_FROM
+          value: env
+        ports:
+        - containerPort: 6379
+</code></pre>
+
+<p>查看部署结果，redis-slave服务与redis-master部署到了同一台机器，而frontend被部署在其他机器上。</p>
+<pre><code># kubectl get pod -o wide
+NAME                 READY     STATUS             RESTARTS   AGE       IP           NODE
+frontend-4nmkz       1/1       Running            0          4m        10.24.51.5   172.16.200.101
+frontend-xmjsr       1/1       Running            0          4m        10.24.77.5   172.16.200.100
+redis-master-lbz9f   1/1       Running            0          41m       10.24.77.4   172.16.200.100
+redis-slave-t9tw4    1/1       Running   3          1m        10.24.77.7   172.16.200.100
+redis-slave-zvcrg    1/1       Running   3          1m        10.24.77.6   172.16.200.100
+</code></pre>
+
+<h3>亲和性/反亲和性调度策略比较</h3>
+<p>调度策略 |  匹配标签 | 操作符 | 拓扑域支持 | 调度目标
+---|---|---|---|---
+nodeAffinity | 主机|In, NotIn, Exists, DoesNotExist, Gt, Lt | 否| pod到指定主机
+podAffinity |Pod |In, NotIn, Exists, DoesNotExist| 是    | pod与指定pod同一拓扑域
+PodAntiAffinity|Pod| In, NotIn, Exists, DoesNotExist |是|pod与指定pod非同一拓扑域</p>
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->

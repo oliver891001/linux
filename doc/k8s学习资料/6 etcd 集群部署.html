@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>第六章 etcd 集群部署</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+</head>
+<body>
+<h3>概述</h3>
+<p>etcd 是一个分布式一致性k-v存储系统，可用于服务注册发现与共享配置，具有以下优点。
+- 简单 ： 相比于晦涩难懂的paxos算法，etcd基于相对简单且易实现的raft算法实现一致性，并通过gRPC提供接口调用
+- 安全：支持TLS通信，并可以针对不同的用户进行对key的读写控制
+- 高性能：10,000 /秒的写性能</p>
+<blockquote>
+<p>etcd release <a href="https://github.com/coreos/etcd/releases/">下载地址</a>  页面下载最新版本的二进制文件</p>
+</blockquote>
+<h3>etcd 依赖go,需要先到官方站点下载最新go</h3>
+<pre><code>tar -xf go1.8.3.linux-amd64.tar.gz -C /usr/local/
+cat &gt; /etc/profile.d/go.sh &lt;&lt;EOF
+export PATH=/usr/local/go/bin/:$PATH
+EOF
+</code></pre>
+
+<h3>安装 etcd</h3>
+<pre><code>tar xf etcd-v3.2.7-linux-amd64.tar.gz  -C /usr/local/
+ln -sv /usr/local/etcd-v3.2.7-linux-amd64/ /usr/local/etcd
+cat &gt; /etc/profile.d/etcd.sh &lt;&lt;EOF
+export PATH=/usr/local/etcd/:$PATH
+EOF
+useradd -r -s /sbin/nologin etcd
+mkdir /data/lib/etcd/ -p
+chown -R etcd:etcd /data/lib/etcd
+</code></pre>
+
+<blockquote>
+<p>etcd-v3.2.1 有bug 解决方法参考链接 <a href="http://dockone.io/question/1408">link</a></p>
+</blockquote>
+<h3>修改/etc/etcd/etcd.conf  注意修改每个node ip</h3>
+<pre><code>[member]
+ETCD_NAME=cd-test-001.drcloud.com
+ETCD_DATA_DIR=&quot;/data/lib/etcd/&quot;
+ETCD_LISTEN_CLIENT_URLS=&quot;http://0.0.0.0:2379&quot;
+ETCD_ADVERTISE_CLIENT_URLS=&quot;http://0.0.0.0:2379&quot;
+ETCD_LISTEN_PEER_URLS=&quot;http://0.0.0.0:2380&quot;
+ETCD_INITIAL_ADVERTISE_PEER_URLS=&quot;http://172.16.200.100:2380&quot;
+[cluster]
+ETCD_INITIAL_CLUSTER=&quot;cd-test-001.drcloud.com=http://172.16.200.100:2380,cd-test-002.drcloud.com=http://172.16.200.101:2380,cd-test-003.drcloud.com=http://172.16.200.102:2380&quot;
+ETCD_INITIAL_CLUSTER_STATE=&quot;new&quot;
+ETCD_INITIAL_CLUSTER_TOKEN=&quot;etcd-cluster&quot;
+</code></pre>
+
+<h3>参数说明</h3>
+<pre><code>name      节点名称
+data-dir      指定节点的数据存储目录
+listen-peer-urls      监听URL，用于与其他节点通讯
+listen-client-urls      对外提供服务的地址：比如 http://ip:2379,http://127.0.0.1:2379 ，客户端会连接到这里和 etcd 交互
+initial-advertise-peer-urls      该节点member(同伴)监听地址，这个值会告诉集群中其他节点
+initial-cluster      集群中所有节点的信息，格式为 node1=http://ip1:2380,node2=http://ip2:2380,… 。注意：这里的 node1 是节点的 --name 指定的名字；后面的 ip1:2380 是 --initial-advertise-peer-urls 指定的值
+initial-cluster-state      新建集群的时候，这个值为 new ；假如已经存在的集群，这个值为 existing
+initial-cluster-token      创建集群的 token，这个值每个集群保持唯一。这样的话，如果你要重新创建集群，即使配置和之前一样，也会再次生成新的集群和节点 uuid；否则会导致多个集群之间的冲突，造成未知的错误
+advertise-client-urls      对外公告的该节点客户端监听地址，这个值会告诉集群中其他节点
+</code></pre>
+
+<h3>systemd 启动配置文件, 默认rpm 安装的</h3>
+<pre><code> cat &gt; /usr/lib/systemd/system/etcd.service  &lt;&lt; EOF
+[Unit]
+Description=Etcd Server
+After=network.target
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+WorkingDirectory=/data/lib/etcd/
+EnvironmentFile=-/etc/etcd/etcd.conf
+User=etcd
+# set GOMAXPROCS to number of processors
+ExecStart=/bin/bash -c &quot;GOMAXPROCS=$(nproc) /usr/local/etcd/etcd --name=\&quot;${ETCD_NAME}\&quot; --data-dir=\&quot;${ETCD_DATA_DIR}\&quot; --listen-client-urls=\&quot;${ETCD_LISTEN_CLIENT_URLS}\&quot; --initial-advertise-peer-urls=\&quot;${ETCD_INITIAL_ADVERTISE_PEER_URLS}\&quot; --listen-peer-urls=\&quot;${ETCD_LISTEN_PEER_URLS}\&quot; --initial-cluster=\&quot;${ETCD_INITIAL_CLUSTER}\&quot; --advertise-client-urls=\&quot;${ETCD_ADVERTISE_CLIENT_URLS}\&quot; --initial-cluster-token=\&quot;${ETCD_INITIAL_CLUSTER_TOKEN}\&quot; --initial-cluster-state=\&quot;${ETCD_INITIAL_CLUSTER_STATE}\&quot;&quot;
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+
+EOF
+</code></pre>
+
+<h3>配置防火墙规则</h3>
+<pre><code>firewall-cmd --zone=public --add-port=2379/tcp --permanent
+firewall-cmd --zone=public --add-port=2380/tcp --permanent
+</code></pre>
+
+<h3>etcd集群运行过程中的改配</h3>
+<p>主要用于故障节点替换，集群扩容需求。</p>
+<p>集群运行过程中的改配不区分static和discovery方式。</p>
+<p>1、替换的步骤：</p>
+<p>比如集群中某一member重启后仍不能恢复时，就需要替换一个新member进来。</p>
+<p>a、从集群中删除老member</p>
+<pre><code>etcdctl member remove 1609b5a3a078c227
+</code></pre>
+
+<p>b、向集群中新增新member</p>
+<p>etcdctl member add <name> <peerURL> 
+例子：敲命令 </p>
+<pre><code>etcdctl member add etcd2 http://192.168.2.56:2380 
+</code></pre>
+
+<p>后返回如下信息</p>
+<pre><code>Added member named etcd2 with ID b7d510356ee2e68b to cluster
+ETCD_NAME=&quot;etcd2&quot;
+ETCD_INITIAL_CLUSTER=&quot;etcd0=http://192.168.2.55:2380,etcd2=http://192.168.2.56:2380,etcd1=http://192.168.2.54:2380&quot;
+ETCD_INITIAL_CLUSTER_STATE=&quot;existing&quot;
+</code></pre>
+
+<p>c、删除老节点data目录
+如果不删除，启动后节点仍旧沿用之前的老id， 其他正常节点不认，不能建立联系</p>
+<p>d、在新member上启动etcd进程</p>
+<p>2、扩容的步骤：</p>
+<p>执行上面第b，d两步即可。</p>
+<h3>etcd 集群健康检查</h3>
+<pre><code>curl http://172.16.200.206:2379/health
+etcdctl cluster-health
+member 37460b828c8625a0 is healthy: got healthy result from http://0.0.0.0:2379
+member 52b98a730bb6d77c is healthy: got healthy result from http://172.16.200.208:2379
+member 7f453c22b9758161 is healthy: got healthy result from http://172.16.200.206:2379
+</code></pre>
+
+<h3>flanneld-0.8</h3>
+<blockquote>
+<p>flanneld-0.8 支持 阿里云 GW 模式 ，默认使用yum 安装。需要替换二进制 flanneld</p>
+</blockquote>
+<pre><code>scp flanneld 172.16.200.216:/usr/bin/flanneld
+</code></pre>
+
+<h3>安装flanneld</h3>
+<pre><code>yum install flanneld
+</code></pre>
+
+<p>设置etcd网络，主要是flannel用于分别docker的网络，‘/coreos.com/network/config’ 这个字段必须与flannel中的&quot;FLANNEL<em>ETCD</em>KEY=&quot;/coreos.com/network&quot; 保持一致</p>
+<p>cat /etc/sysconfig/flanneld</p>
+<pre><code>FLANNEL_ETCD_ENDPOINTS=&quot;http://172.16.200.216:2379,http://172.16.200.206:2379,http://172.16.200.208:2379&quot;
+
+# etcd config key.  This is the configuration key that flannel queries
+# For address range assignment
+ETCD_PREFIX=&quot;/kube-centos/network&quot;
+FLANNEL_ETCD_KEY=&quot;/kube-centos/network&quot;
+# Any additional options that you want to pass
+#FLANNEL_OPTIONS=&quot;&quot;
+</code></pre>
+
+<h3>清理 flannel</h3>
+<pre><code>sudo systemctl stop flanneld
+sudo ip link delete flannel.1
+sudo systemctl --no-block start flanneld
+</code></pre>
+
+<h3>安装kubernetes-cni 依赖kublete 强制安装</h3>
+<pre><code>rpm -ivh --force kubernetes-cni-0.5.1-0.x86_64.rpm --nodeps
+</code></pre>
+
+<h3>config kubelte cni</h3>
+<pre><code>cat /etc/kubernetes/kubelet
+###
+## kubernetes kubelet (minion) config
+#
+## The address for the info server to serve on (set to 0.0.0.0 or &quot;&quot; for all interfaces)
+KUBELET_ADDRESS=&quot;--address=172.16.200.216&quot;
+#
+## The port for the info server to serve on
+#KUBELET_PORT=&quot;--port=10250&quot;
+#
+## You may leave this blank to use the actual hostname
+KUBELET_HOSTNAME=&quot;--hostname-override=172.16.200.216&quot;
+#
+## location of the api-server
+#KUBELET_API_SERVER=&quot;--api-servers=http://172.16.200.216:8080&quot;
+#
+## pod infrastructure container
+KUBELET_POD_INFRA_CONTAINER=&quot;--pod-infra-container-image=gcr.io/google_containers/pause:latest&quot;
+#
+## Add your own!
+KUBELET_ARGS=&quot;--cgroup-driver=systemd  --cluster-dns=10.254.0.2 --experimental-bootstrap-kubeconfig=/etc/kubernetes/bootstrap.kubeconfig --kubeconfig=/etc/kubernetes/kubelet.kubeconfig --require-kubeconfig --cert-dir=/etc/kubernetes/ssl --cluster-domain=cluster.local --hairpin-mode promiscuous-bridge --serialize-image-pulls=false --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin --network-plugin-mtu=1500    --log-dir=/data/logs/kubernetes/ --v=2 --logtostderr=false&quot;
+</code></pre>
+
+<h3>cat /etc/cni/net.d/10-flannel.conf</h3>
+<pre><code> {
+  &quot;name&quot;: &quot;cbr0&quot;,
+  &quot;type&quot;: &quot;flannel&quot;,
+  &quot;delegate&quot;: {
+    &quot;isDefaultGateway&quot;: true,
+    &quot;forceAddress&quot;: true,
+    &quot;bridge&quot;: &quot;cni0&quot;,
+    &quot;mtu&quot;: 1500
+  }
+}    
+</code></pre>
+
+<h3>cat /etc/sysctl.d/k8s.conf  内核参数修改</h3>
+<pre><code>net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1    
+sysctl -p  /etc/sysctl.d/k8s.conf
+</code></pre>
+
+
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->
